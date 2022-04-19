@@ -14,7 +14,7 @@ pub(crate) enum ArchiveFormat {
 impl ArchiveFormat {
     /// Parse archive type from resource extension.
     pub(crate) fn parse_from_extension(resource: &str) -> Result<Self, Error> {
-        if resource.ends_with(".tar.gz") {
+        if resource.ends_with(".tar.gz") || resource.ends_with(".tgz") {
             Ok(Self::TarGz)
         } else if resource.ends_with(".zip") {
             Ok(Self::Zip)
