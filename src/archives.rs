@@ -4,10 +4,12 @@ use std::fs::{self, File};
 use std::path::Path;
 use tempfile::tempdir_in;
 use zip_extensions::read::zip_extract;
+use zstd::Decoder as ZstdDecoder;
 
 /// Supported archive types.
 pub(crate) enum ArchiveFormat {
     TarGz,
+    TarZstd,
     Zip,
 }
 
@@ -16,6 +18,8 @@ impl ArchiveFormat {
     pub(crate) fn parse_from_extension(resource: &str) -> Result<Self, Error> {
         if resource.ends_with(".tar.gz") || resource.ends_with(".tgz") {
             Ok(Self::TarGz)
+        } else if resource.ends_with(".tar.zst") {
+            Ok(Self::TarZstd)
         } else if resource.ends_with(".zip") {
             Ok(Self::Zip)
         } else {
@@ -37,6 +41,12 @@ pub(crate) fn extract_archive<P: AsRef<Path>>(
         ArchiveFormat::TarGz => {
             let tar_gz = File::open(path)?;
             let tar = GzDecoder::new(tar_gz);
+            let mut archive = tar::Archive::new(tar);
+            archive.unpack(&temp_target)?;
+        }
+        ArchiveFormat::TarZstd => {
+            let tar_zst = File::open(path)?;
+            let tar = ZstdDecoder::new(tar_zst)?;
             let mut archive = tar::Archive::new(tar);
             archive.unpack(&temp_target)?;
         }
